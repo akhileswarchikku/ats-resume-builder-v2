@@ -1,0 +1,71 @@
+%% ATS Resume Template — slots filled by latex_builder.py
+%% DO NOT EDIT SLOTS MANUALLY — they are auto-filled
+
+\documentclass[10pt, letterpaper]{article}
+
+%% ---- Packages ----
+\usepackage[margin=0.75in]{geometry}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{fontawesome5}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage{multicol}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+\hypersetup{colorlinks=true, urlcolor=blue, linkcolor=black}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{2pt}
+
+\titleformat{\section}{\large\bfseries}{}{0em}{}[\titlerule]
+\titlespacing{\section}{0pt}{6pt}{3pt}
+
+%% ---- SLOT: contact ----
+%% Values injected: NAME, EMAIL, PHONE, LINKEDIN, LOCATION
+\newcommand{\NAME}{%%NAME%%}
+\newcommand{\EMAIL}{%%EMAIL%%}
+\newcommand{\PHONE}{%%PHONE%%}
+\newcommand{\LINKEDIN}{%%LINKEDIN%%}
+\newcommand{\LOCATION}{%%LOCATION%%}
+
+\begin{document}
+
+%% ===== HEADER =====
+\begin{center}
+    {\LARGE\bfseries \NAME} \\[4pt]
+    \EMAIL \quad|\quad \PHONE \quad|\quad \LOCATION \\
+    \href{\LINKEDIN}{\LINKEDIN}
+\end{center}
+
+\vspace{4pt}
+
+%% ===== SUMMARY =====
+\section{Professional Summary}
+%%SUMMARY%%
+
+\vspace{2pt}
+
+%% ===== SKILLS =====
+\section{Technical Skills}
+\begin{itemize}[leftmargin=*, noitemsep, topsep=2pt]
+%%SKILLS_ITEMS%%
+\end{itemize}
+
+%% ===== EXPERIENCE =====
+\section{Professional Experience}
+%%EXPERIENCE_BLOCKS%%
+
+%% ===== PROJECTS =====
+\section{Projects}
+%%PROJECT_BLOCKS%%
+
+%% ===== EDUCATION =====
+\section{Education}
+%%EDUCATION_BLOCKS%%
+
+%% ===== CERTIFICATIONS (optional) =====
+%%CERTIFICATIONS_SECTION%%
+
+\end{document}
