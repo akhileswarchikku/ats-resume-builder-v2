@@ -18,7 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 import asyncio
-from api import doc_loader, ats_scorer, keyword_extractor, latex_builder, pdf_gen, resume_parser, cost_tracker
+from api import doc_loader, ats_scorer, keyword_extractor, latex_builder, pdf_gen, resume_parser, cost_tracker, resume_verifier
 from api import config
 
 
@@ -87,15 +87,39 @@ async def upload_docs(
     portfolio: UploadFile = File(None),
 ):
     """
-    Portfolio-only upload endpoint. Resume is pre-loaded and cannot be replaced.
+    Upload resume and/or portfolio.
+    Resume uploads are gated by an identity verification agent — the uploaded
+    resume must belong to the same person as the currently authorized resume.
     """
     docs_dir = config.DOCS_DIR
     docs_dir.mkdir(parents=True, exist_ok=True)
     saved: list[str] = []
+    verification: dict | None = None
 
-    # Resume upload is intentionally disabled — use the pre-loaded docs/resume.docx
     if resume and resume.filename:
-        await resume.read()   # drain the stream so multipart doesn't error
+        resume_bytes = await resume.read()
+
+        # Run identity verification agent
+        verification = await resume_verifier.verify(resume.filename, resume_bytes)
+
+        if not verification["approved"]:
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "error":             "identity_mismatch",
+                    "authorized_name":   verification["authorized_name"],
+                    "uploaded_name":     verification["uploaded_name"],
+                    "matched_fields":    verification["matched_fields"],
+                    "mismatched_fields": verification["mismatched_fields"],
+                    "message":           verification["message"],
+                },
+            )
+
+        # Verified — save the new resume
+        ext = Path(resume.filename).suffix or ".docx"
+        dest = docs_dir / f"resume{ext}"
+        dest.write_bytes(resume_bytes)
+        saved.append(dest.name)
 
     if portfolio and portfolio.filename:
         dest = docs_dir / portfolio.filename
@@ -103,8 +127,13 @@ async def upload_docs(
         saved.append(dest.name)
 
     if saved:
-        doc_loader.load_docs()   # reload in-memory cache
-    return {"saved": saved, "docs_dir": str(docs_dir)}
+        doc_loader.load_docs()
+
+    return {
+        "saved":        saved,
+        "docs_dir":     str(docs_dir),
+        "verification": verification,
+    }
 
 
 @app.get("/stats")
