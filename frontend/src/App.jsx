@@ -46,8 +46,10 @@ export default function App() {
   const [sessionStats, setSessionStats] = useState({ session_cost_usd: 0, applications: 0, llm_calls: 0 });
 
   // Save folder (File System Access API)
-  const [saveDir,     setSaveDir]     = useState(null);   // FileSystemDirectoryHandle
-  const [saveStatus,  setSaveStatus]  = useState("");     // "" | "saving" | path string | "error"
+  const [saveDir,       setSaveDir]       = useState(null);
+  const [saveStatus,    setSaveStatus]    = useState("");
+  const [resumeReady,   setResumeReady]   = useState(false);
+  const [highlightUpload, setHighlightUpload] = useState(false);
 
   const handleGenerate = async () => {
     if (!jd.trim()) { setError("Paste a job description first."); return; }
@@ -55,9 +57,18 @@ export default function App() {
     try {
       const data = await generateResume(jd);
       setResult(data);
+      setHighlightUpload(false);
       if (data.session_stats) setSessionStats(data.session_stats);
     } catch (e) {
-      setError(e.message);
+      // Detect "no resume uploaded" error and highlight the upload panel
+      const msg = e.message || "";
+      const isNoResume = msg.includes("resume.docx not found") || msg.includes("resume.pdf not found");
+      if (isNoResume) {
+        setHighlightUpload(true);
+        setError("Upload your Resume first using the panel above, then generate.");
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -130,7 +141,10 @@ export default function App() {
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
 
         {/* ── Upload Docs ─────────────────────────────────────────────────── */}
-        <UploadDocs onUploaded={() => setError("")} />
+        <UploadDocs
+          highlight={highlightUpload}
+          onResumeReady={() => { setResumeReady(true); setHighlightUpload(false); setError(""); }}
+        />
 
         {/* ── JD Input ────────────────────────────────────────────────────── */}
         <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
