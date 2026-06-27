@@ -7,12 +7,17 @@ Builds LaTeX from parsed resume dict.
 - Zero LLM involvement — deterministic
 """
 import re
+import platform
+
+# Cambria on Windows (system font); Caladea on Linux — free metric-compatible clone
+# Docker: apt-get install -y fonts-crosextra-caladea
+_MAIN_FONT = "Cambria" if platform.system() == "Windows" else "Caladea"
 
 _TEMPLATE = r"""
 \documentclass[10pt, letterpaper]{article}
 \usepackage[top=0.5in, bottom=0.5in, left=0.7in, right=0.7in]{geometry}
 \usepackage{fontspec}
-\setmainfont{Cambria}
+\setmainfont{""" + _MAIN_FONT + r"""}
 \usepackage{enumitem}
 \usepackage{hyperref}
 \usepackage{titlesec}

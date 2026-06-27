@@ -9,20 +9,28 @@ from pathlib import Path
 
 
 def _find_tectonic() -> str:
-    # tectonic installed via conda-forge lands here on Windows
+    import os
     candidates = [
+        # Linux / Docker
+        "/usr/local/bin/tectonic",
+        "/usr/bin/tectonic",
+        os.path.expanduser("~/.cargo/bin/tectonic"),   # cargo / drop.tectonic.works install
+        os.path.expanduser("~/.local/bin/tectonic"),
+        # Windows — conda LLM_GPU env
         r"C:\Users\akhil\anaconda3\envs\LLM_GPU\Library\bin\tectonic.exe",
         r"C:\Users\akhil\anaconda3\envs\LLM_GPU\Scripts\tectonic.exe",
-        "tectonic",  # if on PATH
     ]
     for c in candidates:
-        path = Path(c)
-        if path.exists():
-            return str(path)
+        if Path(c).exists():
+            return c
     result = shutil.which("tectonic")
     if result:
         return result
-    raise RuntimeError("tectonic not found. Install with: conda install -c conda-forge tectonic")
+    raise RuntimeError(
+        "tectonic not found. "
+        "Linux: curl --proto '=https' --tlsv1.2 -fsSL https://drop.tectonic.works | sh  "
+        "Windows: conda install -c conda-forge tectonic"
+    )
 
 
 def latex_to_pdf(latex_source: str) -> bytes:

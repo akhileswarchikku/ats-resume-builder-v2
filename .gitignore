@@ -1,5 +1,6 @@
 # Environment — never commit real keys
 .env
+frontend/.env
 
 # Personal resume files — add your own to docs/
 docs/*.pdf

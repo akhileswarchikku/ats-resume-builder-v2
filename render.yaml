@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: ats-resume-v2-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    envVars:
+      - key: OPENROUTER_API_KEY
+        sync: false          # set manually in Render dashboard
+      - key: OPENROUTER_APP_TITLE
+        value: ATS Resume Builder v2
+      - key: OPENROUTER_HTTP_REFERER
+        value: https://ats-resume-v2-api.onrender.com
+      - key: LLM_MODEL
+        value: google/gemini-2.5-flash
+      - key: DOCS_DIR
+        value: /app/docs
+      - key: APPLIES_DIR
+        value: /app/outputs
+      - key: API_PORT
+        value: "8001"

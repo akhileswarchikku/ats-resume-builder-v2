@@ -13,7 +13,7 @@ import subprocess
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -79,6 +79,37 @@ def _ats_to_dict(r: ats_scorer.ATSResult) -> dict:
 
 def _safe_folder_name(text: str) -> str:
     return re.sub(r"[^\w\-]", "_", text.strip())[:60]
+
+
+@app.post("/upload-docs")
+async def upload_docs(
+    resume: UploadFile = File(None),
+    portfolio: UploadFile = File(None),
+):
+    """
+    Upload resume and/or portfolio files to the server's docs/ directory.
+    Called once on first use when running on a remote server.
+    resume    → saved as docs/resume.{ext}   (e.g. resume.docx)
+    portfolio → saved as docs/{original name}  (e.g. Project_Portfolio.docx)
+    """
+    docs_dir = config.DOCS_DIR
+    docs_dir.mkdir(parents=True, exist_ok=True)
+    saved: list[str] = []
+
+    if resume and resume.filename:
+        ext = Path(resume.filename).suffix or ".docx"
+        dest = docs_dir / f"resume{ext}"
+        dest.write_bytes(await resume.read())
+        saved.append(dest.name)
+
+    if portfolio and portfolio.filename:
+        dest = docs_dir / portfolio.filename
+        dest.write_bytes(await portfolio.read())
+        saved.append(dest.name)
+
+    if saved:
+        doc_loader.load_docs()   # reload in-memory cache
+    return {"saved": saved, "docs_dir": str(docs_dir)}
 
 
 @app.get("/stats")
