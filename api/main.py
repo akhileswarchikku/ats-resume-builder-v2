@@ -87,20 +87,15 @@ async def upload_docs(
     portfolio: UploadFile = File(None),
 ):
     """
-    Upload resume and/or portfolio files to the server's docs/ directory.
-    Called once on first use when running on a remote server.
-    resume    → saved as docs/resume.{ext}   (e.g. resume.docx)
-    portfolio → saved as docs/{original name}  (e.g. Project_Portfolio.docx)
+    Portfolio-only upload endpoint. Resume is pre-loaded and cannot be replaced.
     """
     docs_dir = config.DOCS_DIR
     docs_dir.mkdir(parents=True, exist_ok=True)
     saved: list[str] = []
 
+    # Resume upload is intentionally disabled — use the pre-loaded docs/resume.docx
     if resume and resume.filename:
-        ext = Path(resume.filename).suffix or ".docx"
-        dest = docs_dir / f"resume{ext}"
-        dest.write_bytes(await resume.read())
-        saved.append(dest.name)
+        await resume.read()   # drain the stream so multipart doesn't error
 
     if portfolio and portfolio.filename:
         dest = docs_dir / portfolio.filename
