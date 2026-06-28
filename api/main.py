@@ -143,6 +143,7 @@ def stats():
 
 @app.get("/health")
 def health():
+    doc_loader.load_docs()
     return {
         "status": "ok",
         "resume_chars": len(doc_loader.get_resume_text()),
@@ -150,8 +151,29 @@ def health():
     }
 
 
+@app.get("/docs-status")
+def docs_status():
+    docs_dir = config.DOCS_DIR
+    files = []
+    if docs_dir.exists():
+        for f in docs_dir.iterdir():
+            try:
+                files.append({"name": f.name, "size_bytes": f.stat().st_size})
+            except Exception:
+                pass
+    doc_loader.load_docs()
+    return {
+        "docs_dir": str(docs_dir),
+        "files": files,
+        "resume_chars": len(doc_loader.get_resume_text()),
+        "projects": list(doc_loader.get_projects().keys()),
+    }
+
+
 @app.post("/generate")
 async def generate(req: JDRequest):
+    # Always reload from disk so uploads are reflected immediately
+    doc_loader.load_docs()
     resume_text = doc_loader.get_resume_text()
     if not resume_text:
         raise HTTPException(400, "No resume found in docs/. Add resume.pdf or resume.docx.")
